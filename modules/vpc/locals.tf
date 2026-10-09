@@ -21,6 +21,14 @@ locals {
   # Stable numeric index per AZ, from its letter: a=0, b=1 ... f=5 (drives subnet CIDRs)
   az_index = { for az, letter in local.az_suffix : az => index(["a", "b", "c", "d", "e", "f"], letter) }
 
+  # AZs that get a NAT gateway: only the first one in single-NAT mode, all of them otherwise
+  nat_azs = var.single_nat_gateway ? [var.azs[0]] : var.azs
+
+  # Which NAT each private subnet uses for internet egress
+  #   single_nat_gateway = false -> its own AZ's NAT (no cross-AZ dependency)
+  #   single_nat_gateway = true  -> the NAT in the first AZ (cheaper, cross-AZ hop)
+  nat_for_az = { for az in var.azs : az => var.single_nat_gateway ? var.azs[0] : az }
+
   # Mandatory tags go LAST in merge() so caller-supplied tags cannot override them.
   tags = merge(var.tags, {
     Project     = var.project
