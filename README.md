@@ -42,12 +42,29 @@ envs/prod/     root config: calls the module with prod values
 docs/          diagrams and design notes
 ```
 
+## Naming convention
+
+Every resource is named `<project>-<env>-<region>-<resource>[-<az>]`:
+
+| Resource | Example |
+|---|---|
+| VPC | `jv-dev-use1-vpc` |
+| Private subnet in AZ a | `jv-dev-use1-private-a` |
+| NAT gateway in AZ a | `jv-dev-use1-nat-a` |
+| Interface endpoint (ECR API) | `jv-dev-use1-vpce-ecr-api` |
+
+- `project` is set by the caller (no default in the module).
+- The region short code is derived from the provider region (`us-east-1` → `use1`, `eu-west-2` → `euw2`).
+- Names are for humans; **tags** are for automation, cost reports and audits. Every resource gets
+  `Project`, `Environment`, `ManagedBy = terraform` plus any extra `tags` passed by the caller
+  (caller tags cannot override the mandatory ones).
+
 ## Requirements
 
 | Tool | Version |
 |---|---|
 | Terraform | >= 1.7 |
-| AWS provider | >= 5.0, < 7.0 |
+| AWS provider | >= 6.0, < 7.0 |
 
 ## Author
 

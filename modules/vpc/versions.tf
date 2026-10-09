@@ -8,12 +8,13 @@
 
 terraform {
   # 1.7+ is required for `terraform test` with mock providers (used in tests/).
+  # AWS provider 6.x is required for the `region` attribute of data.aws_region.
   required_version = ">= 1.7.0"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.0, < 7.0"
+      version = ">= 6.0, < 7.0"
     }
   }
 }
