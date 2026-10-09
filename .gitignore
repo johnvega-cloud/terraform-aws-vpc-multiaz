@@ -26,7 +26,8 @@ crash.*.log
 .terraformrc
 terraform.rc
 
-# NOTE: .terraform.lock.hcl IS committed in envs/* (pins provider versions)
+# Provider lock file: committed ONLY in root configs (envs/*), never in reusable modules
+modules/**/.terraform.lock.hcl
 
 # --- OS / editors ---
 .DS_Store

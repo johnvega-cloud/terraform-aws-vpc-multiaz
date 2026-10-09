@@ -40,7 +40,7 @@ variable "vpc_cidr" {
 }
 
 variable "azs" {
-  description = "Availability Zone names to spread the VPC across, e.g. [\"us-east-1a\", \"us-east-1b\"]. Order matters: index 0 hosts the shared NAT when single_nat_gateway = true."
+  description = "Availability Zone names to spread the VPC across, e.g. [\"us-east-1a\", \"us-east-1b\"]. The first AZ hosts the shared NAT when single_nat_gateway = true."
   type        = list(string)
 
   validation {
@@ -51,6 +51,11 @@ variable "azs" {
   validation {
     condition     = length(distinct(var.azs)) == length(var.azs)
     error_message = "azs must not contain duplicates."
+  }
+
+  validation {
+    condition     = alltrue([for az in var.azs : can(regex("^[a-z]{2}(-[a-z]+)+-[0-9]+[a-f]$", az))])
+    error_message = "Each AZ must be a standard AZ name ending in a letter a-f, e.g. \"us-east-1a\" (the letter drives the subnet CIDR)."
   }
 }
 

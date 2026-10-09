@@ -18,6 +18,9 @@ locals {
   # Last letter of each AZ: us-east-1a -> a (used as name suffix: jv-dev-use1-private-a)
   az_suffix = { for az in var.azs : az => substr(az, length(az) - 1, 1) }
 
+  # Stable numeric index per AZ, from its letter: a=0, b=1 ... f=5 (drives subnet CIDRs)
+  az_index = { for az, letter in local.az_suffix : az => index(["a", "b", "c", "d", "e", "f"], letter) }
+
   # Mandatory tags go LAST in merge() so caller-supplied tags cannot override them.
   tags = merge(var.tags, {
     Project     = var.project
