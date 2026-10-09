@@ -1,0 +1,34 @@
+# --- Terraform ---
+# Local provider/plugin cache (downloaded by `terraform init`)
+**/.terraform/*
+
+# State files: contain resource IDs and can contain secrets. NEVER commit.
+*.tfstate
+*.tfstate.*
+
+# Saved plans: binary, may contain sensitive values
+*.tfplan
+tfplan
+
+# Variable files: may contain secrets. Non-secret env values live in envs/<env>/main.tf
+*.tfvars
+*.tfvars.json
+
+# Local overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Crash logs and CLI config
+crash.log
+crash.*.log
+.terraformrc
+terraform.rc
+
+# NOTE: .terraform.lock.hcl IS committed in envs/* (pins provider versions)
+
+# --- OS / editors ---
+.DS_Store
+.idea/
+.vscode/
