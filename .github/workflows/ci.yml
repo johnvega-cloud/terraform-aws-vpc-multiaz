@@ -1,0 +1,95 @@
+# CI: format, validate, lint, security scan and unit tests on every push/PR.
+# Nothing here touches AWS: no credentials, no plan, no apply.
+
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  TF_VERSION: 1.14.7
+  TF_IN_AUTOMATION: "true"
+
+jobs:
+  fmt:
+    name: terraform fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - run: terraform fmt -check -recursive -diff
+
+  validate:
+    name: validate (${{ matrix.dir }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: [modules/vpc, envs/dev, envs/stage, envs/prod]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      # -lockfile=readonly: fail if the committed lock file does not match (envs only)
+      - name: terraform init
+        working-directory: ${{ matrix.dir }}
+        run: |
+          if [ -f .terraform.lock.hcl ] && [[ "${{ matrix.dir }}" == envs/* ]]; then
+            terraform init -backend=false -input=false -lockfile=readonly
+          else
+            terraform init -backend=false -input=false
+          fi
+      - name: terraform validate
+        working-directory: ${{ matrix.dir }}
+        run: terraform validate
+
+  test:
+    name: terraform test (mocked AWS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+      - working-directory: modules/vpc
+        run: |
+          terraform init -backend=false -input=false
+          terraform test
+
+  tflint:
+    name: tflint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: terraform-linters/setup-tflint@v6
+        with:
+          tflint_version: v0.64.0
+      - name: tflint --init
+        run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }} # avoids GitHub API rate limits when downloading plugins
+      - run: tflint --recursive --config "$GITHUB_WORKSPACE/.tflint.hcl" --format compact
+
+  checkov:
+    name: checkov (security)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install checkov==3.3.9
+      # Inline `checkov:skip` comments in the code document each accepted finding
+      - run: checkov -d . --framework terraform --compact --quiet
