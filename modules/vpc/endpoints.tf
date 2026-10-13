@@ -25,6 +25,7 @@ resource "aws_vpc_endpoint" "s3" {
 # are allowed back automatically, so no egress rule is needed.
 
 resource "aws_security_group" "endpoints" {
+  # checkov:skip=CKV2_AWS_5:False positive: attached to the Interface endpoints below (aws_vpc_endpoint.interface).
   count = length(var.interface_endpoints) > 0 ? 1 : 0
 
   name        = "${local.name}-sg-vpce"

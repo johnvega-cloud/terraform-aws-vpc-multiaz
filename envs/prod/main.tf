@@ -16,6 +16,9 @@ module "vpc" {
   azs                = ["us-east-1a", "us-east-1b", "us-east-1c"]
   single_nat_gateway = false
 
+  # Audit trail: keep a year of network logs in prod (dev/stage use the 30-day default)
+  flow_logs_retention_days = 365
+
   tags = {
     Owner      = "john-vega"
     CostCenter = "lab"

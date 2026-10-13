@@ -29,6 +29,7 @@ resource "aws_route_table_association" "public" {
 # --- NAT gateways: one per AZ, or a single shared one ---------------------------
 
 resource "aws_eip" "nat" {
+  # checkov:skip=CKV2_AWS_19:False positive: the EIP is attached to the NAT gateway (allocation_id), not to an EC2 instance.
   for_each = toset(local.nat_azs)
 
   domain = "vpc"

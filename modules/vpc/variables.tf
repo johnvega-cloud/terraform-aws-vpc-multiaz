@@ -99,6 +99,17 @@ variable "flow_logs_retention_days" {
   }
 }
 
+variable "flow_logs_kms_key_arn" {
+  description = "Optional customer-managed KMS key ARN to encrypt the Flow Logs group. null = CloudWatch default encryption (AWS-owned key). The key policy must allow logs.<region>.amazonaws.com to use it."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.flow_logs_kms_key_arn == null || can(regex("^arn:aws[a-z-]*:kms:", var.flow_logs_kms_key_arn))
+    error_message = "flow_logs_kms_key_arn must be a KMS key ARN (arn:aws:kms:...)."
+  }
+}
+
 # --- Tagging ------------------------------------------------------------------
 
 variable "tags" {
