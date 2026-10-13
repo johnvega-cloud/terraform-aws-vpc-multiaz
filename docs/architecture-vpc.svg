@@ -1,0 +1,190 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1110" width="1400" height="1110" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title>terraform-aws-vpc-multiaz: reference architecture</title>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#232F3E"/>
+    </marker>
+    <style>
+      .t  { fill: #232F3E; }
+      .mu { fill: #545B64; }
+      .mono { font-family: 'SFMono-Regular', Menlo, Consolas, monospace; font-size: 13px; fill: #232F3E; }
+      .icon-label { fill: #FFFFFF; font-weight: 700; font-size: 15px; }
+      .solid { stroke: #232F3E; stroke-width: 2.2; fill: none; }
+      .dash  { stroke: #232F3E; stroke-width: 2; fill: none; stroke-dasharray: 7 5; }
+    </style>
+  </defs>
+
+  <!-- White canvas so the diagram stays legible on GitHub dark mode -->
+  <rect width="1400" height="1110" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="30" y="42" class="t" font-size="26" font-weight="700">terraform-aws-vpc-multiaz — reference architecture (prod: one NAT gateway per AZ)</text>
+  <text x="30" y="68" class="mu" font-size="14">Two of up to four AZs shown. dev/stage set single_nat_gateway = true: one NAT in the first AZ, and every private route table points to it.</text>
+
+  <!-- Internet -->
+  <ellipse cx="700" cy="100" rx="90" ry="26" fill="#F2F3F3" stroke="#545B64" stroke-width="2"/>
+  <text x="700" y="106" text-anchor="middle" class="t" font-size="17" font-weight="700">Internet</text>
+  <path d="M700,172 V130" class="solid" marker-end="url(#arrow)"/>
+
+  <!-- Region -->
+  <rect x="30" y="140" width="1340" height="845" fill="none" stroke="#00A4A6" stroke-width="2" stroke-dasharray="9 6"/>
+  <text x="45" y="162" fill="#00A4A6" font-size="16" font-weight="700">Region (from the caller's provider, e.g. us-east-1)</text>
+
+  <!-- VPC -->
+  <rect x="60" y="200" width="1280" height="610" fill="none" stroke="#8C4FFF" stroke-width="2.5"/>
+  <rect x="60" y="200" width="34" height="34" fill="#8C4FFF"/>
+  <text x="77" y="222" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="700">VPC</text>
+  <text x="104" y="224" fill="#8C4FFF" font-size="16" font-weight="700">VPC · 10.30.0.0/16</text>
+  <text x="1325" y="224" text-anchor="end" class="mu" font-size="13">DNS support + hostnames on · default SG locked (no rules)</text>
+
+  <!-- Internet Gateway on the VPC edge -->
+  <rect x="672" y="172" width="56" height="56" rx="8" fill="#8C4FFF"/>
+  <text x="700" y="206" text-anchor="middle" class="icon-label">IGW</text>
+  <text x="740" y="194" class="t" font-size="14" font-weight="700">Internet Gateway</text>
+
+  <!-- Shared public route table -->
+  <text x="110" y="268" class="t" font-size="14" font-weight="700">Public route table (one, shared by all public subnets):</text>
+  <text x="482" y="268" class="mono">0.0.0.0/0 → IGW</text>
+
+  <!-- ================= AZ a ================= -->
+  <rect x="90" y="310" width="595" height="470" fill="none" stroke="#147EBA" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="105" y="333" fill="#147EBA" font-size="15" font-weight="700">Availability Zone a</text>
+
+  <!-- public subnet a -->
+  <rect x="110" y="345" width="555" height="130" fill="#F2F6E8" stroke="#7AA116" stroke-width="2"/>
+  <text x="122" y="368" fill="#5A7A10" font-size="15" font-weight="700">Public subnet · 10.30.192.0/22</text>
+  <rect x="360" y="385" width="56" height="56" rx="8" fill="#8C4FFF"/>
+  <text x="388" y="419" text-anchor="middle" class="icon-label">NAT</text>
+  <text x="428" y="408" class="t" font-size="14" font-weight="700">NAT gateway (a)</text>
+  <text x="428" y="427" class="mu" font-size="13">+ Elastic IP (fixed egress IP)</text>
+  <text x="122" y="400" class="mu" font-size="13">Internet-facing ALB / NLB go here</text>
+  <text x="122" y="420" class="mu" font-size="13">No auto-assigned public IPs</text>
+
+  <!-- private subnet a -->
+  <rect x="110" y="495" width="555" height="270" fill="#E6F2F8" stroke="#147EBA" stroke-width="2"/>
+  <text x="122" y="518" fill="#147EBA" font-size="15" font-weight="700">Private subnet · 10.30.0.0/19</text>
+  <text x="122" y="550" class="t" font-size="13" font-weight="700">Private route table (one per AZ)</text>
+  <text x="122" y="570" class="mono">0.0.0.0/0     → NAT (a)</text>
+  <text x="122" y="589" class="mono">S3 prefix list → S3 endpoint</text>
+  <rect x="430" y="610" width="56" height="56" rx="8" fill="#8C4FFF"/>
+  <text x="458" y="644" text-anchor="middle" class="icon-label">ENI</text>
+  <rect x="550" y="610" width="56" height="56" rx="8" fill="#8C4FFF"/>
+  <text x="578" y="644" text-anchor="middle" class="icon-label">ENI</text>
+  <text x="458" y="684" text-anchor="middle" class="t" font-size="13" font-weight="700">ecr.api</text>
+  <text x="578" y="684" text-anchor="middle" class="t" font-size="13" font-weight="700">ecr.dkr</text>
+  <text x="518" y="702" text-anchor="middle" class="mu" font-size="12">Interface endpoints</text>
+  <text x="518" y="720" text-anchor="middle" class="mu" font-size="12">SG: TCP 443 from VPC CIDR only</text>
+  <rect x="130" y="680" width="255" height="68" rx="6" fill="#FFFFFF" stroke="#879196" stroke-dasharray="5 4"/>
+  <text x="257" y="708" text-anchor="middle" class="mu" font-size="13">Workloads: EKS, RDS, apps</text>
+  <text x="257" y="728" text-anchor="middle" class="mu" font-size="12">consumers, not created here</text>
+  <!-- egress a: private -> NAT -> IGW -->
+  <path d="M388,560 V447" class="solid" marker-end="url(#arrow)"/>
+  <path d="M388,385 V298 H688 V234" class="solid" marker-end="url(#arrow)"/>
+
+  <!-- ================= AZ b ================= -->
+  <rect x="715" y="310" width="595" height="470" fill="none" stroke="#147EBA" stroke-width="2" stroke-dasharray="7 5"/>
+  <text x="730" y="333" fill="#147EBA" font-size="15" font-weight="700">Availability Zone b</text>
+
+  <!-- public subnet b -->
+  <rect x="735" y="345" width="555" height="130" fill="#F2F6E8" stroke="#7AA116" stroke-width="2"/>
+  <text x="747" y="368" fill="#5A7A10" font-size="15" font-weight="700">Public subnet · 10.30.196.0/22</text>
+  <rect x="985" y="385" width="56" height="56" rx="8" fill="#8C4FFF"/>
+  <text x="1013" y="419" text-anchor="middle" class="icon-label">NAT</text>
+  <text x="1053" y="408" class="t" font-size="14" font-weight="700">NAT gateway (b)</text>
+  <text x="1053" y="427" class="mu" font-size="13">+ Elastic IP (fixed egress IP)</text>
+  <text x="747" y="400" class="mu" font-size="13">Internet-facing ALB / NLB go here</text>
+  <text x="747" y="420" class="mu" font-size="13">No auto-assigned public IPs</text>
+
+  <!-- private subnet b -->
+  <rect x="735" y="495" width="555" height="270" fill="#E6F2F8" stroke="#147EBA" stroke-width="2"/>
+  <text x="747" y="518" fill="#147EBA" font-size="15" font-weight="700">Private subnet · 10.30.32.0/19</text>
+  <text x="747" y="550" class="t" font-size="13" font-weight="700">Private route table (one per AZ)</text>
+  <text x="747" y="570" class="mono">0.0.0.0/0     → NAT (b)</text>
+  <text x="747" y="589" class="mono">S3 prefix list → S3 endpoint</text>
+  <rect x="1055" y="610" width="56" height="56" rx="8" fill="#8C4FFF"/>
+  <text x="1083" y="644" text-anchor="middle" class="icon-label">ENI</text>
+  <rect x="1175" y="610" width="56" height="56" rx="8" fill="#8C4FFF"/>
+  <text x="1203" y="644" text-anchor="middle" class="icon-label">ENI</text>
+  <text x="1083" y="684" text-anchor="middle" class="t" font-size="13" font-weight="700">ecr.api</text>
+  <text x="1203" y="684" text-anchor="middle" class="t" font-size="13" font-weight="700">ecr.dkr</text>
+  <text x="1143" y="702" text-anchor="middle" class="mu" font-size="12">Interface endpoints</text>
+  <text x="1143" y="720" text-anchor="middle" class="mu" font-size="12">SG: TCP 443 from VPC CIDR only</text>
+  <rect x="755" y="680" width="255" height="68" rx="6" fill="#FFFFFF" stroke="#879196" stroke-dasharray="5 4"/>
+  <text x="882" y="708" text-anchor="middle" class="mu" font-size="13">Workloads: EKS, RDS, apps</text>
+  <text x="882" y="728" text-anchor="middle" class="mu" font-size="12">consumers, not created here</text>
+  <!-- egress b -->
+  <path d="M1013,560 V447" class="solid" marker-end="url(#arrow)"/>
+  <path d="M1013,385 V298 H712 V234" class="solid" marker-end="url(#arrow)"/>
+
+  <!-- ================= Endpoints and regional services ================= -->
+  <!-- S3 Gateway endpoint on the VPC edge -->
+  <rect x="272" y="782" width="56" height="56" rx="8" fill="#8C4FFF"/>
+  <text x="300" y="816" text-anchor="middle" class="icon-label">GW</text>
+  <text x="340" y="831" class="t" font-size="14" font-weight="700">S3 Gateway endpoint (free)</text>
+  <path d="M300,765 V780" class="dash"/>
+  <path d="M300,840 V866" class="dash" marker-end="url(#arrow)"/>
+
+  <!-- ECR via interface endpoints (private DNS) -->
+  <path d="M518,766 C540,830 640,840 682,866" class="dash" marker-end="url(#arrow)"/>
+  <path d="M1143,766 C1110,840 780,835 718,866" class="dash" marker-end="url(#arrow)"/>
+  <text x="742" y="888" class="mu" font-size="12">private DNS: api.ecr and *.dkr.ecr</text>
+  <text x="742" y="904" class="mu" font-size="12">resolve to the endpoint ENIs</text>
+
+  <!-- Flow logs -->
+  <path d="M1050,812 V866" class="dash" marker-end="url(#arrow)"/>
+  <text x="1060" y="840" class="mu" font-size="12">VPC Flow Logs (ALL traffic)</text>
+
+  <!-- S3 -->
+  <rect x="272" y="870" width="56" height="56" rx="8" fill="#7AA116"/>
+  <text x="300" y="904" text-anchor="middle" class="icon-label">S3</text>
+  <text x="300" y="946" text-anchor="middle" class="t" font-size="14" font-weight="700">Amazon S3</text>
+  <text x="300" y="964" text-anchor="middle" class="mu" font-size="12">incl. ECR image layers</text>
+
+  <!-- ECR -->
+  <rect x="672" y="870" width="56" height="56" rx="8" fill="#ED7100"/>
+  <text x="700" y="904" text-anchor="middle" class="icon-label">ECR</text>
+  <text x="700" y="946" text-anchor="middle" class="t" font-size="14" font-weight="700">Amazon ECR</text>
+  <text x="700" y="964" text-anchor="middle" class="mu" font-size="12">regional service, outside the VPC</text>
+
+  <!-- CloudWatch Logs -->
+  <rect x="1022" y="870" width="56" height="56" rx="8" fill="#E7157B"/>
+  <text x="1050" y="904" text-anchor="middle" class="icon-label">CW</text>
+  <text x="1050" y="946" text-anchor="middle" class="t" font-size="14" font-weight="700">CloudWatch Logs</text>
+  <text x="1050" y="964" text-anchor="middle" class="mu" font-size="12">retention 30 d (dev) / 365 d (prod)</text>
+
+  <!-- IAM role for flow logs -->
+  <rect x="1222" y="870" width="56" height="56" rx="8" fill="#DD344C"/>
+  <text x="1250" y="904" text-anchor="middle" class="icon-label">IAM</text>
+  <text x="1250" y="946" text-anchor="middle" class="t" font-size="14" font-weight="700">IAM role</text>
+  <text x="1250" y="964" text-anchor="middle" class="mu" font-size="12">writes only to its log group</text>
+  <path d="M1220,898 H1082" class="dash" marker-end="url(#arrow)"/>
+
+  <!-- ================= Legend ================= -->
+  <text x="30" y="1018" class="t" font-size="15" font-weight="700">Legend</text>
+  <rect x="100" y="1004" width="40" height="20" fill="none" stroke="#00A4A6" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="148" y="1019" class="t" font-size="13">Region</text>
+  <rect x="215" y="1004" width="40" height="20" fill="none" stroke="#8C4FFF" stroke-width="2"/>
+  <text x="263" y="1019" class="t" font-size="13">VPC</text>
+  <rect x="315" y="1004" width="40" height="20" fill="none" stroke="#147EBA" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="363" y="1019" class="t" font-size="13">Availability Zone</text>
+  <rect x="490" y="1004" width="40" height="20" fill="#F2F6E8" stroke="#7AA116" stroke-width="2"/>
+  <text x="538" y="1019" class="t" font-size="13">Public subnet</text>
+  <rect x="645" y="1004" width="40" height="20" fill="#E6F2F8" stroke="#147EBA" stroke-width="2"/>
+  <text x="693" y="1019" class="t" font-size="13">Private subnet</text>
+  <path d="M810,1014 H860" class="solid" marker-end="url(#arrow)"/>
+  <text x="870" y="1019" class="t" font-size="13">Internet egress</text>
+  <path d="M990,1014 H1040" class="dash" marker-end="url(#arrow)"/>
+  <text x="1050" y="1019" class="t" font-size="13">Private AWS network / logs</text>
+
+  <rect x="100" y="1046" width="20" height="20" rx="4" fill="#8C4FFF"/>
+  <text x="128" y="1061" class="t" font-size="13">Networking</text>
+  <rect x="225" y="1046" width="20" height="20" rx="4" fill="#7AA116"/>
+  <text x="253" y="1061" class="t" font-size="13">Storage</text>
+  <rect x="330" y="1046" width="20" height="20" rx="4" fill="#ED7100"/>
+  <text x="358" y="1061" class="t" font-size="13">Containers</text>
+  <rect x="455" y="1046" width="20" height="20" rx="4" fill="#E7157B"/>
+  <text x="483" y="1061" class="t" font-size="13">Management</text>
+  <rect x="590" y="1046" width="20" height="20" rx="4" fill="#DD344C"/>
+  <text x="618" y="1061" class="t" font-size="13">Security / identity</text>
+  <text x="790" y="1061" class="mu" font-size="12">Simplified icons in AWS category colors. Example CIDRs: prod (10.30.0.0/16).</text>
+</svg>
