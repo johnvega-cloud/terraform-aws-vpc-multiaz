@@ -7,10 +7,13 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_cloudwatch_log_group" "flow_logs" {
+  # checkov:skip=CKV_AWS_338:Retention is a caller decision (flow_logs_retention_days); prod sets 365.
+  # checkov:skip=CKV_AWS_158:CMK encryption is opt-in via flow_logs_kms_key_arn; default is CloudWatch's AWS-owned key.
   count = var.enable_flow_logs ? 1 : 0
 
   name              = "/aws/vpc-flow-logs/${local.name}"
   retention_in_days = var.flow_logs_retention_days # never "forever": logs cost money every month
+  kms_key_id        = var.flow_logs_kms_key_arn
 
   tags = merge(local.tags, { Name = "${local.name}-flow-logs" })
 }
