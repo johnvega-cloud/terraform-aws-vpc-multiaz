@@ -4,7 +4,7 @@
 #
 # What it adds on top of the module, only to prove traffic really flows:
 #   - a probe instance in a PRIVATE subnet, reached through SSM (no SSH, no public IP)
-#   - an S3 bucket whose policy DENIES every request that does not arrive
+#   - an S3 bucket whose policy DENIES the probe's reads unless they arrive
 #     through this VPC's S3 gateway endpoint
 
 terraform {
@@ -174,14 +174,14 @@ resource "aws_s3_bucket_policy" "vpce_only" {
       Principal = "*"
       Action    = "s3:GetObject"
       Resource  = "${aws_s3_bucket.vpce_only.arn}/*"
+      # Scoped to the probe role: Terraform itself reads the object from outside
+      # the VPC on every refresh, and a bucket-wide deny would break plan/destroy.
       Condition = {
         StringNotEquals = { "aws:SourceVpce" = module.vpc.s3_endpoint_id }
+        ArnEquals       = { "aws:PrincipalArn" = aws_iam_role.probe.arn }
       }
     }]
   })
-
-  # The marker is uploaded from outside the VPC, so it must exist before the deny.
-  depends_on = [aws_s3_object.marker]
 }
 
 # --- Outputs used by the checks in README.md -----------------------------------
