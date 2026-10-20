@@ -48,7 +48,7 @@ data "aws_iam_policy_document" "flow_logs_assume" {
 resource "aws_iam_role" "flow_logs" {
   count = var.enable_flow_logs ? 1 : 0
 
-  name               = "${local.name}-vpc-flow-logs"
+  name               = "${var.iam_role_name_prefix}${local.name}-vpc-flow-logs"
   assume_role_policy = data.aws_iam_policy_document.flow_logs_assume.json
 
   tags = local.tags

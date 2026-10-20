@@ -307,3 +307,26 @@ run "rejects_duplicate_azs" {
 
   expect_failures = [var.azs]
 }
+
+run "iam_role_name_prefix_applied" {
+  command = plan
+
+  variables {
+    iam_role_name_prefix = "team-a-"
+  }
+
+  assert {
+    condition     = aws_iam_role.flow_logs[0].name == "team-a-jv-dev-use1-vpc-flow-logs"
+    error_message = "iam_role_name_prefix must be prepended to the Flow Logs role name."
+  }
+}
+
+run "iam_role_name_prefix_rejects_invalid" {
+  command = plan
+
+  variables {
+    iam_role_name_prefix = "bad prefix!"
+  }
+
+  expect_failures = [var.iam_role_name_prefix]
+}
