@@ -16,7 +16,10 @@ identically in every environment, changing only its inputs.
 
 ## Architecture
 
-![VPC architecture](docs/architecture-vpc.png)
+![VPC architecture](docs/architecture-vpc.svg)
+
+**How to build it, and in what order:** see [docs/BUILD_GUIDE.md](docs/BUILD_GUIDE.md)
+(authoring steps, design decisions, and the provisioning order Terraform follows).
 
 - **One VPC per environment** (ideally one AWS account per environment), with
   non-overlapping CIDRs so they can be connected later (Transit Gateway / peering).
@@ -54,7 +57,7 @@ e2e/aws/              end-to-end test in a real account (run manually, then dest
 envs/dev/             root config: calls the module with dev values
 envs/stage/           root config: calls the module with stage values
 envs/prod/            root config: calls the module with prod values
-docs/                 diagrams
+docs/                 architecture diagram (SVG) and build guide
 .github/workflows/    CI: fmt, validate, test, tflint, checkov
 ```
 
