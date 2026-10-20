@@ -50,6 +50,7 @@ Reordering or removing an AZ never changes (and never recreates) the subnets of 
 ```
 modules/vpc/          reusable module (the "template")
 modules/vpc/tests/    terraform test suite (mocked AWS provider)
+e2e/aws/              end-to-end test in a real account (run manually, then destroy)
 envs/dev/             root config: calls the module with dev values
 envs/stage/           root config: calls the module with stage values
 envs/prod/            root config: calls the module with prod values
@@ -203,7 +204,7 @@ traffic goes through endpoints instead of the NAT. **Destroy lab environments wh
 ```bash
 cd modules/vpc
 terraform init -backend=false
-terraform test        # 15 runs, mocked AWS provider: no credentials, no cost
+terraform test        # 17 runs, mocked AWS provider: no credentials, no cost
 ```
 
 The suite checks naming and mandatory tags, the CIDR layout and its stability
@@ -221,8 +222,21 @@ push and pull request, without AWS credentials:
 | `tflint` | Recommended rules + AWS ruleset + documented variables/outputs |
 | `checkov` | Security misconfigurations |
 
-A real `terraform plan` of `envs/dev` against AWS was verified: 28 resources to add,
-0 to change, 0 to destroy.
+### End-to-end test in real AWS
+
+[`e2e/aws/`](e2e/aws/README.md) deploys the module plus a probe instance in a private
+subnet (SSM only, no SSH) and checks real traffic. It is run by hand, not in CI,
+because it costs money while it is up. Last run: 2026-10-20, us-east-1.
+
+| Check | Result |
+|---|---|
+| `apply` | 40 resources created, including the Flow Logs IAM role |
+| Egress IP from a private subnet | the NAT gateway's Elastic IP |
+| `api.ecr` / `dkr.ecr` DNS from the VPC | private `10.10.x.x` addresses; `ecr get-login-password` ok |
+| S3 read | succeeds only through the gateway endpoint (bucket policy denies any other path) |
+| Flow Logs | `ACTIVE`, delivery `SUCCESS`, `ACCEPT` records in CloudWatch |
+| Second `plan -detailed-exitcode` | `0`: no changes (idempotent) |
+| `destroy` | 40 destroyed, nothing left behind |
 
 ## Requirements
 
