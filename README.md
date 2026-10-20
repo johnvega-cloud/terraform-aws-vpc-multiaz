@@ -118,6 +118,7 @@ permissions for EC2/VPC, CloudWatch Logs and IAM (role for flow logs).
 | `enable_flow_logs` | bool | `true` | Send VPC Flow Logs to CloudWatch Logs. |
 | `flow_logs_retention_days` | number | `30` | Retention, any value CloudWatch accepts. |
 | `flow_logs_kms_key_arn` | string | `null` | Optional customer-managed KMS key for the log group. |
+| `iam_role_name_prefix` | string | `""` | Prefix for the Flow Logs IAM role name, for accounts whose IAM policies only allow roles matching a pattern. |
 | `tags` | map(string) | `{}` | Extra tags. Cannot override `Project`, `Environment`, `ManagedBy`, `Module`. |
 
 All inputs are validated at plan time (bad CIDR, one AZ, duplicate AZs, unknown

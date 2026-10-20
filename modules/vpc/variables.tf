@@ -110,6 +110,17 @@ variable "flow_logs_kms_key_arn" {
   }
 }
 
+variable "iam_role_name_prefix" {
+  description = "Optional prefix for the IAM role this module creates (Flow Logs). Use it where IAM policies only allow roles matching a pattern, e.g. \"team-a-\". Empty = no prefix."
+  type        = string
+  default     = ""
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9+=,.@_-]{0,32}$", var.iam_role_name_prefix))
+    error_message = "iam_role_name_prefix must be at most 32 characters from the IAM name charset [A-Za-z0-9+=,.@_-]."
+  }
+}
+
 # --- Tagging ------------------------------------------------------------------
 
 variable "tags" {
