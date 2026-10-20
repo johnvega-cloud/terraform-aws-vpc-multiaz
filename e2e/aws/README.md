@@ -44,14 +44,14 @@ aws ssm get-command-invocation --command-id "$CMD" --instance-id "$ID" \
 | `EGRESS_IP` | equals `$NAT_IP` | private subnet reaches the internet through the NAT gateway |
 | `ECR_API` | a `10.10.x.x` address | ECR Interface endpoint + private DNS work |
 | `ECR_LOGIN` | `ok` | ECR API answers through the endpoint |
-| `marker.txt` | `reached-through-vpce` | S3 traffic uses the gateway endpoint (the bucket policy denies any other path) |
-| same `aws s3 cp` from your laptop | `AccessDenied` | the bucket policy really blocks requests outside the endpoint |
+| `marker.txt` | `reached-through-vpce` | S3 traffic uses the gateway endpoint (the bucket policy denies the probe's reads on any other path) |
 | `aws logs describe-log-streams --log-group-name $(terraform output -raw flow_logs_log_group_name)` | at least one stream (~10 min after apply) | Flow Logs deliver to CloudWatch with the module's IAM role |
 | `terraform plan -detailed-exitcode` | exit code `0` | the module is idempotent |
 
 ## Destroy
 
 ```bash
+# Pass the same -var values used for apply (including iam_role_name_prefix)
 terraform plan -destroy -var aws_account_id=<ACCOUNT_ID> -out=tfdestroy
 terraform apply tfdestroy
 ```
