@@ -5,7 +5,7 @@
 #
 # What they prove: naming, CIDR layout, NAT topology, endpoint wiring,
 # optional features and input validation. What they do NOT prove: that AWS
-# accepts the request (that is what `terraform plan` against a real account is for).
+# accepts the request and traffic really flows (that is what e2e/aws/ is for).
 
 mock_provider "aws" {
   # Data sources the module reads from the provider. Mocks would otherwise
