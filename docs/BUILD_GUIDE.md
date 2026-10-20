@@ -29,6 +29,7 @@ The commit history follows these steps, so `git log --reverse` shows the same pa
 | 9 | `modules/vpc/tests/` | `terraform test` with a mocked AWS provider | Locks in the design decisions (CIDR layout, NAT routing, tags) so a later change cannot silently break them. Runs with no credentials. |
 | 10 | `.tflint.hcl`, `.github/workflows/ci.yml` | Lint, security scan and tests on every PR | Automates steps 2–9 as a gate: `main` is protected and only accepts changes that pass CI. |
 | 11 | `README.md`, `docs/` | Usage, security, cost, diagrams | Documents what was actually built, so it is written last and kept in sync. |
+| 12 | `e2e/aws/` | Real-account test: probe instance in a private subnet, checks, destroy | Mocked tests prove the plan; only a real apply proves AWS accepts it and traffic flows. Run by hand (it costs money), not in CI. |
 
 ### Key decisions made in step 0
 
@@ -120,3 +121,5 @@ endpoints, and the VPC last. An EIP is released only after its NAT is deleted.
 - From a private instance: `curl -s https://checkip.amazonaws.com` returns one of `nat_public_ips`.
 - `nslookup api.ecr.<region>.amazonaws.com` from inside the VPC returns **private** IPs (the endpoint ENIs).
 - Flow Logs appear in `/aws/vpc-flow-logs/<project>-<env>-<region>` within a few minutes.
+
+[`e2e/aws/`](../e2e/aws/README.md) automates these checks (plus S3 through the gateway endpoint) and destroys everything afterwards.
