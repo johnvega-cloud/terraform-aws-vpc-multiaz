@@ -187,21 +187,26 @@ resource "aws_s3_bucket_policy" "vpce_only" {
 # --- Outputs used by the checks in README.md -----------------------------------
 
 output "vpc_id" {
-  value = module.vpc.vpc_id
+  description = "ID of the VPC under test"
+  value       = module.vpc.vpc_id
 }
 
 output "nat_public_ips" {
-  value = module.vpc.nat_public_ips
+  description = "Public IPs of the NAT gateways"
+  value       = module.vpc.nat_public_ips
 }
 
 output "probe_instance_id" {
-  value = aws_instance.probe.id
+  description = "ID of the probe instance used by the checks"
+  value       = aws_instance.probe.id
 }
 
 output "bucket" {
-  value = aws_s3_bucket.vpce_only.id
+  description = "Name of the bucket only reachable through the S3 endpoint"
+  value       = aws_s3_bucket.vpce_only.id
 }
 
 output "flow_logs_log_group_name" {
-  value = module.vpc.flow_logs_log_group_name
+  description = "CloudWatch log group that receives the VPC Flow Logs"
+  value       = module.vpc.flow_logs_log_group_name
 }
