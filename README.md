@@ -16,7 +16,10 @@ identically in every environment, changing only its inputs.
 
 ## Architecture
 
-![VPC architecture](docs/architecture-vpc.png)
+![VPC architecture](docs/architecture-vpc.svg)
+
+**How to build it, and in what order:** see [docs/BUILD_GUIDE.md](docs/BUILD_GUIDE.md)
+(authoring steps, design decisions, and the provisioning order Terraform follows).
 
 - **One VPC per environment** (ideally one AWS account per environment), with
   non-overlapping CIDRs so they can be connected later (Transit Gateway / peering).
@@ -50,10 +53,11 @@ Reordering or removing an AZ never changes (and never recreates) the subnets of 
 ```
 modules/vpc/          reusable module (the "template")
 modules/vpc/tests/    terraform test suite (mocked AWS provider)
+e2e/aws/              end-to-end test in a real account (run manually, then destroy)
 envs/dev/             root config: calls the module with dev values
 envs/stage/           root config: calls the module with stage values
 envs/prod/            root config: calls the module with prod values
-docs/                 diagrams
+docs/                 architecture diagram (SVG) and build guide
 .github/workflows/    CI: fmt, validate, test, tflint, checkov
 ```
 
@@ -118,6 +122,7 @@ permissions for EC2/VPC, CloudWatch Logs and IAM (role for flow logs).
 | `enable_flow_logs` | bool | `true` | Send VPC Flow Logs to CloudWatch Logs. |
 | `flow_logs_retention_days` | number | `30` | Retention, any value CloudWatch accepts. |
 | `flow_logs_kms_key_arn` | string | `null` | Optional customer-managed KMS key for the log group. |
+| `iam_role_name_prefix` | string | `""` | Prefix for the Flow Logs IAM role name, for accounts whose IAM policies only allow roles matching a pattern. |
 | `tags` | map(string) | `{}` | Extra tags. Cannot override `Project`, `Environment`, `ManagedBy`, `Module`. |
 
 All inputs are validated at plan time (bad CIDR, one AZ, duplicate AZs, unknown
@@ -202,7 +207,7 @@ traffic goes through endpoints instead of the NAT. **Destroy lab environments wh
 ```bash
 cd modules/vpc
 terraform init -backend=false
-terraform test        # 15 runs, mocked AWS provider: no credentials, no cost
+terraform test        # 17 runs, mocked AWS provider: no credentials, no cost
 ```
 
 The suite checks naming and mandatory tags, the CIDR layout and its stability
@@ -220,8 +225,21 @@ push and pull request, without AWS credentials:
 | `tflint` | Recommended rules + AWS ruleset + documented variables/outputs |
 | `checkov` | Security misconfigurations |
 
-A real `terraform plan` of `envs/dev` against AWS was verified: 28 resources to add,
-0 to change, 0 to destroy.
+### End-to-end test in real AWS
+
+[`e2e/aws/`](e2e/aws/README.md) deploys the module plus a probe instance in a private
+subnet (SSM only, no SSH) and checks real traffic. It is run by hand, not in CI,
+because it costs money while it is up. Last run: 2026-10-20, us-east-1.
+
+| Check | Result |
+|---|---|
+| `apply` | 40 resources created, including the Flow Logs IAM role |
+| Egress IP from a private subnet | the NAT gateway's Elastic IP |
+| `api.ecr` / `dkr.ecr` DNS from the VPC | private `10.10.x.x` addresses; `ecr get-login-password` ok |
+| S3 read | succeeds only through the gateway endpoint (bucket policy denies any other path) |
+| Flow Logs | `ACTIVE`, delivery `SUCCESS`, `ACCEPT` records in CloudWatch |
+| Second `plan -detailed-exitcode` | `0`: no changes (idempotent) |
+| `destroy` | 40 destroyed, nothing left behind |
 
 ## Requirements
 

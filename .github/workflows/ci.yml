@@ -91,5 +91,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install checkov==3.3.9
-      # Inline `checkov:skip` comments in the code document each accepted finding
-      - run: checkov -d . --framework terraform --compact --quiet
+      # Inline `checkov:skip` comments in the code document each accepted finding.
+      # e2e/ is a throwaway test harness (applied by hand, then destroyed), not shipped code.
+      - run: checkov -d . --framework terraform --compact --quiet --skip-path e2e
